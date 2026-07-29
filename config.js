@@ -12,8 +12,8 @@
 
 const CONFIG = {
   // Créés sur https://developers.eveonline.com/applications
-  CLIENT_ID: "COLLE_TON_CLIENT_ID_ICI",
-  CLIENT_SECRET: "COLLE_TON_CLIENT_SECRET_ICI", // optionnel avec PKCE, gardé pour le refresh
+  CLIENT_ID: "fb9e88b753ff4e868fec1ef71254091b",
+  CLIENT_SECRET: "eat_2XVoALvVbWw9kWdc1esRMO3VTBJmQMA6h_67tdi", // optionnel avec PKCE, gardé pour le refresh
 
   // Doit correspondre EXACTEMENT à l'URL "Callback" enregistrée sur
   // developers.eveonline.com (ex: https://tonuser.github.io/eve-espionage/callback.html)
@@ -22,7 +22,7 @@ const CONFIG = {
   // Mot de passe local demandé avant de pouvoir consulter le dashboard.
   // Stocké en clair ici (c'est un site statique) — change-le.
   // Simple protection contre un accès occasionnel, pas une vraie sécurité.
-  ACCESS_PASSWORD: "changeme",
+  ACCESS_PASSWORD: "azertyuiop",
 
   // Portée de la recherche cyno (années-lumière). ~7.19 LY = cyno standard,
   // ~7.99 LY avec Black Ops / cyno beacon selon le contexte.
