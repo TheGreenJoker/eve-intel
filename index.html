@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>ESI Intel</title>
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+  <!-- ============ ÉCRAN 1 : MOT DE PASSE ============ -->
+  <div id="gate-password" class="login-wrap">
+    <div class="login-card">
+      <div class="eyebrow">Accès restreint</div>
+      <h1 class="title">ESI Intel</h1>
+      <div class="subtitle">Outil personnel d'analyse ESI — perso / corp / alliance</div>
+      <div class="field">
+        <label>Mot de passe</label>
+        <input type="password" id="pw-input" placeholder="••••••••" autofocus>
+      </div>
+      <button class="btn" id="pw-submit">Déverrouiller</button>
+      <div class="err-msg" id="pw-err"></div>
+      <div class="hint">Protection locale basique côté client. Ne remplace pas une vraie authentification si ce site est exposé publiquement.</div>
+    </div>
+  </div>
+
+  <!-- ============ ÉCRAN 2 : LOGIN SSO EVE ============ -->
+  <div id="gate-sso" class="login-wrap" style="display:none;">
+    <div class="login-card">
+      <div class="eyebrow">Étape 2 / 2</div>
+      <h1 class="title">Connexion EVE Online</h1>
+      <div class="subtitle">Connecte-toi avec ton propre personnage (ou ton alt) via le SSO officiel. Le token reste uniquement dans ton navigateur.</div>
+      <button class="btn-eve" id="sso-btn">
+        <img src="https://web.ccpgamescdn.com/eveonlineassets/developers/eve-sso-login-black-small.png" alt="" style="height:20px;">
+        Se connecter avec EVE Online
+      </button>
+      <div class="err-msg" id="sso-err"></div>
+      <div class="hint">
+        Scopes demandés : lecture perso/corpo/alliance (assets, wallets, structures, killmails, industrie…).<br>
+        Seules les sections pour lesquelles ton perso a réellement la permission/le rôle seront affichées.
+      </div>
+    </div>
+  </div>
+
+  <!-- ============ APP ============ -->
+  <div id="app" class="app">
+    <div class="topbar">
+      <div class="brand">
+        <div class="brand-mark">EI</div>
+        <div class="brand-name">ESI <span>INTEL</span></div>
+      </div>
+      <div class="tabs">
+        <div class="tab active" data-tab="char" onclick="switchTab('char')">Personnage</div>
+        <div class="tab" data-tab="corp" onclick="switchTab('corp')">Corporation</div>
+        <div class="tab" data-tab="alliance" onclick="switchTab('alliance')">Alliance</div>
+      </div>
+      <div class="who">
+        <img id="who-portrait" src="" alt="">
+        <span id="who-name">—</span>
+        <span class="logout" onclick="logout()">Déconnexion</span>
+      </div>
+    </div>
+    <div class="content">
+      <div class="page active" id="page-char"></div>
+      <div class="page" id="page-corp"></div>
+      <div class="page" id="page-alliance"></div>
+    </div>
+  </div>
+
+<script src="js/config.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/esi.js"></script>
+<script src="js/cyno.js"></script>
+<script src="js/app.js"></script>
+<script>
+  // ---- Gate mot de passe ----
+  const gatePassword = document.getElementById("gate-password");
+  const gateSso = document.getElementById("gate-sso");
+  const appEl = document.getElementById("app");
+  const pwInput = document.getElementById("pw-input");
+  const pwErr = document.getElementById("pw-err");
+
+  function showScreen(name) {
+    gatePassword.style.display = name === "password" ? "flex" : "none";
+    gateSso.style.display = name === "sso" ? "flex" : "none";
+    appEl.classList.toggle("active", name === "app");
+  }
+
+  document.getElementById("pw-submit").addEventListener("click", tryPassword);
+  pwInput.addEventListener("keydown", e => { if (e.key === "Enter") tryPassword(); });
+
+  function tryPassword() {
+    if (checkPassword(pwInput.value)) {
+      pwErr.textContent = "";
+      routeAfterPassword();
+    } else {
+      pwErr.textContent = "Mot de passe incorrect.";
+    }
+  }
+
+  function routeAfterPassword() {
+    const session = getSession();
+    if (session) {
+      showScreen("app");
+      initApp();
+    } else {
+      showScreen("sso");
+    }
+  }
+
+  document.getElementById("sso-btn").addEventListener("click", () => {
+    startLogin().catch(e => {
+      document.getElementById("sso-err").textContent = e.message;
+    });
+  });
+
+  // ---- Boot ----
+  (function boot() {
+    if (!isPasswordUnlocked()) {
+      showScreen("password");
+      return;
+    }
+    routeAfterPassword();
+  })();
+</script>
+</body>
+</html>
