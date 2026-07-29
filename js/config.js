@@ -17,7 +17,7 @@ const CONFIG = {
 
   // Doit correspondre EXACTEMENT à l'URL "Callback" enregistrée sur
   // developers.eveonline.com (ex: https://tonuser.github.io/eve-espionage/callback.html)
-  REDIRECT_URI: window.location.origin + window.location.pathname.replace(/index\.html$/, "").replace(/\/$/, "") + "/callback.html",
+  REDIRECT_URI: "https://thegreenjoker.github.io/eve-intel/callback.html",
 
   // Mot de passe local demandé avant de pouvoir consulter le dashboard.
   // Stocké en clair ici (c'est un site statique) — change-le.
