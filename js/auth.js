@@ -64,21 +64,29 @@ async function completeLogin(code, state) {
     throw new Error("State PKCE invalide — relance le login.");
   }
 
-  const body = new URLSearchParams({
+  // Si un client_secret est fourni (app "confidential"), les credentials passent
+  // UNIQUEMENT par le header Basic Auth — client_id ne doit alors PAS être dans le corps
+  // (sinon EVE SSO renvoie invalid_request: "Client credentials should only be provided once").
+  const hasSecret = CONFIG.CLIENT_SECRET && CONFIG.CLIENT_SECRET !== "COLLE_TON_CLIENT_SECRET_ICI";
+
+  const bodyParams = {
     grant_type: "authorization_code",
     code: code,
-    client_id: CONFIG.CLIENT_ID,
     code_verifier: verifier
-  });
+  };
+  if (!hasSecret) bodyParams.client_id = CONFIG.CLIENT_ID;
+  const body = new URLSearchParams(bodyParams);
 
   const headers = { "Content-Type": "application/x-www-form-urlencoded" };
-  // Si un client_secret est fourni (app "confidential"), on l'ajoute en Basic auth
-  if (CONFIG.CLIENT_SECRET && CONFIG.CLIENT_SECRET !== "COLLE_TON_CLIENT_SECRET_ICI") {
+  if (hasSecret) {
     headers["Authorization"] = "Basic " + btoa(`${CONFIG.CLIENT_ID}:${CONFIG.CLIENT_SECRET}`);
   }
 
   const res = await fetch(SSO_TOKEN, { method: "POST", headers, body });
-  if (!res.ok) throw new Error("Échec de l'échange du code OAuth (" + res.status + ")");
+  if (!res.ok) {
+    const errBody = await res.text();
+    throw new Error("Échec de l'échange du code OAuth (" + res.status + ") — " + errBody);
+  }
   const tok = await res.json();
   await storeToken(tok);
   return tok;
@@ -88,18 +96,25 @@ async function refreshToken() {
   const session = getSession();
   if (!session || !session.refresh_token) throw new Error("Pas de refresh_token disponible.");
 
-  const body = new URLSearchParams({
+  const hasSecret = CONFIG.CLIENT_SECRET && CONFIG.CLIENT_SECRET !== "COLLE_TON_CLIENT_SECRET_ICI";
+
+  const bodyParams = {
     grant_type: "refresh_token",
-    refresh_token: session.refresh_token,
-    client_id: CONFIG.CLIENT_ID
-  });
+    refresh_token: session.refresh_token
+  };
+  if (!hasSecret) bodyParams.client_id = CONFIG.CLIENT_ID;
+  const body = new URLSearchParams(bodyParams);
+
   const headers = { "Content-Type": "application/x-www-form-urlencoded" };
-  if (CONFIG.CLIENT_SECRET && CONFIG.CLIENT_SECRET !== "COLLE_TON_CLIENT_SECRET_ICI") {
+  if (hasSecret) {
     headers["Authorization"] = "Basic " + btoa(`${CONFIG.CLIENT_ID}:${CONFIG.CLIENT_SECRET}`);
   }
 
   const res = await fetch(SSO_TOKEN, { method: "POST", headers, body });
-  if (!res.ok) throw new Error("Échec du refresh token (" + res.status + ")");
+  if (!res.ok) {
+    const errBody = await res.text();
+    throw new Error("Échec du refresh token (" + res.status + ") — " + errBody);
+  }
   const tok = await res.json();
   await storeToken(tok, session.refresh_token);
   return tok;
